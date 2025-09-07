@@ -121,9 +121,7 @@ button:hover {
   text-align: center;
   margin-top: 0.8rem;
 }
-.extra-buttons.hidden {
-  display: none;
-}
+.extra-buttons.hidden { display: none; }
 
 /* Output */
 .output-label {
@@ -136,6 +134,16 @@ button:hover {
   padding: 1rem;
 }
 
+/* Generated description box */
+.gen-description {
+  background: rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+/* Project Cards */
 .idea-card {
   background: rgba(255,255,255,0.1);
   border-radius: 12px;
@@ -147,16 +155,13 @@ button:hover {
 .idea-card h2 {
   margin-top: 0;
   color: #00c6ff;
-  display: flex;
-  justify-content: space-between;
-  cursor: pointer;
 }
+
+/* Section headings inside projects */
 .section-title {
-  margin-top: 0.8rem;
+  margin-top: 0.6rem;
   font-size: 1rem;
-  color: #ffd700;
-  border-bottom: 1px solid #444;
-  padding-bottom: 0.2rem;
+  color: #ffffff;
   display: flex;
   justify-content: space-between;
   cursor: pointer;
@@ -171,15 +176,11 @@ button:hover {
   display: inline-block;
   transition: transform 0.3s ease;
 }
-.expand-icon.open {
-  transform: rotate(90deg);
-}
+.expand-icon.open { transform: rotate(90deg); }
 
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.fade-in {
-  animation: fadeIn 0.7s ease;
-}
+.fade-in { animation: fadeIn 0.7s ease; }
