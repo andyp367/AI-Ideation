@@ -33,31 +33,60 @@ function getSelectedRadio(group){ const sel=group.querySelector("input[type=radi
 
 // ==== Format output ====
 function formatOutput(text){
-  let cleaned = text.replace(/\|/g," ").replace(/---+/g,"").replace(/<\/?table.*?>/gi,"")
-    .replace(/<\/?tr.*?>/gi,"").replace(/<\/?td.*?>/gi,"").replace(/\*\*/g,"").replace(/\*/g,"")
+  // Clean raw AI text
+  let cleaned = text.replace(/\|/g," ").replace(/---+/g,"")
+    .replace(/<\/?table.*?>/gi,"").replace(/<\/?tr.*?>/gi,"")
+    .replace(/<\/?td.*?>/gi,"").replace(/\*\*/g,"").replace(/\*/g,"")
     .replace(/###/g,"").replace(/##/g,"").trim();
 
-  let lines = cleaned.split(/\n/).filter(l=>l.trim());
-  let desc = lines.slice(0,2).join(" "); // First lines as general description box
-  let projects = cleaned.split(/Project Idea\s*\d+/i).filter(s=>s.trim()).slice(0,3);
+  // Initial generated description box
+  let descriptionBox = cleaned.split(/\n/).slice(0,2).join(" ");
+  let html = `<div class="gen-description">${descriptionBox}</div>`;
 
-  let html = `<div class="gen-description">${desc}</div>`;
+  // Split into up to 3 project ideas
+  let projects = cleaned.split(/Project Idea\s*\d+/i).filter(s=>s.trim()).slice(0,3);
+  if(projects.length===0 && cleaned) projects = [cleaned]; // Ensure at least 1 project
 
   projects.forEach((proj,idx)=>{
     let titleMatch = proj.match(/Name\s*[:\-]\s*(.*)/i);
-    let title = titleMatch?titleMatch[1]:`Project ${idx+1}`;
-    // Always show section titles
-    const sections = ["General Description","Required Technologies","Budget Breakdown","Timeframe Breakdown","Complexity","Similar Products","Novel Elements"];
+    let title = titleMatch ? titleMatch[1] : `Project ${idx+1}`;
+
+    // Add all sections
+    const sections = ["General Description","Required Technologies","Budget Breakdown",
+      "Timeframe Breakdown","Complexity","Similar Products","Novel Elements"];
+
     let htmlSections = "";
     sections.forEach(sec=>{
       let regex = new RegExp(sec+"[:\\-]?\\s*(.*?)((?="+sections.join("|")+")|$)","is");
       let match = proj.match(regex);
-      let content = match?match[1].trim().replace(/\n{2,}/g,"<br>"):"Content not provided.";
+      let content = match ? match[1].trim() : "";
+
+      // Special handling for Timeframe & Complexity from sliders/selections if missing
+      if(sec==="Timeframe Breakdown" && !content){
+        const [minTime,maxTime] = getTimeframeRange();
+        content = `- Research: ${Math.round(minTime*0.25)} months
+- Development: ${Math.round(minTime*0.4)} months
+- Hardware setup: ${Math.round(minTime*0.2)} months
+- Final prototype ready: ${Math.round(minTime*0.15)} months`;
+      }
+      if(sec==="Complexity" && !content){
+        content = document.querySelector('input[name="complexity"]:checked')?.value || "Medium";
+      }
+
+      // Format content lists: convert lines starting with dash or bullet
+      content = content.split(/\n/).map(line=>{
+        line = line.trim();
+        if(!line) return "";
+        return line.startsWith("-") ? line : `- ${line}`;
+      }).join("<br>");
+
       htmlSections += `<div class="section-title">${sec} <span class="expand-icon">▶</span></div>
         <div class="section-content">${content}</div>`;
     });
+
     html += `<div class="idea-card fade-in"><h2>${title}</h2>${htmlSections}</div>`;
   });
+
   return html;
 }
 
@@ -66,6 +95,7 @@ function initCollapsible(){
   document.querySelectorAll(".section-title").forEach(title=>{
     const icon = title.querySelector(".expand-icon");
     const content = title.nextElementSibling;
+    content.style.display = "none"; // Hide by default
     title.addEventListener("click", ()=>{
       const isOpen = content.style.display==="block";
       content.style.display = isOpen?"none":"block";
@@ -73,6 +103,7 @@ function initCollapsible(){
     });
   });
 }
+
 
 // ==== Generate function ====
 async function generateIdeas(mode="normal"){
