@@ -80,40 +80,58 @@ Generate up to 3 computer engineering project ideas. For each, provide:
 }
 
 // Format output
-function formatOutput(text){
-  text = text.replace(/\|/g," ").replace(/---+/g,"").replace(/<\/?[^>]+>/gi,"").trim();
+function formatOutput(text) {
+  // Clean up Markdown artifacts
+  text = text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/\|/g, " ").replace(/---+/g,"").replace(/<\/?[^>]+>/gi,"").trim();
 
-  // Split by "Project" but always ensure at least 3 projects
-  let ideaMatches = text.split(/Project\s*Idea\s*\d+/i).filter(s=>s.trim());
-  if(ideaMatches.length===0) ideaMatches=[text]; // fallback to entire text if split fails
-  ideaMatches = ideaMatches.slice(0,3); // max 3 projects
+  // Split into projects using "Project Idea" or fallback by lines
+  let ideaMatches = text.split(/Project\s*Idea\s*\d+[:\-]?\s*/i).filter(s => s.trim());
+  if (ideaMatches.length === 0) ideaMatches = [text]; // fallback
+  ideaMatches = ideaMatches.slice(0, 3); // max 3 projects
 
-  return ideaMatches.map((idea,idx)=>{
-    let lines=idea.split("\n").map(l=>l.trim()).filter(Boolean);
-    let nameLine = lines.find(l=>/Name/i.test(l));
-    let name = nameLine ? nameLine.split(":")[1]?.trim() : `Unnamed Project`;
+  return ideaMatches.map((idea, idx) => {
+    let lines = idea.split("\n").map(l => l.trim()).filter(Boolean);
 
-    // Sections
-    let sections = ["General Description","Required Technologies & Budget Breakdown","Timeframe Breakdown","Complexity & Skills Needed","Similar Products","Novel Elements"];
-    let contentHtml = sections.map(sec=>{
-      let regex = new RegExp(sec+"\\s*:?\\s*([\\s\\S]*?)($|"+sections.join("|")+")","i");
+    // Try to detect name: either from "Name: ..." or first line if it looks like a title
+    let nameLine = lines.find(l => /^Name\s*:/.test(l)) || lines[0];
+    let nameMatch = nameLine.match(/Name\s*:\s*(.*)/i);
+    let name = nameMatch ? nameMatch[1].trim() : nameLine.trim();
+
+    // Sections we want to display
+    let sections = [
+      "General Description",
+      "Required Technologies & Budget Breakdown",
+      "Timeframe Breakdown",
+      "Complexity & Skills Needed",
+      "Similar Products",
+      "Novel Elements"
+    ];
+
+    let contentHtml = sections.map(sec => {
+      // Extract content for the section
+      let regex = new RegExp(sec + "\\s*:?\\s*([\\s\\S]*?)($|" + sections.join("|") + ")", "i");
       let match = idea.match(regex);
       let content = match ? match[1].trim() : "N/A";
 
-      // Format lists
-      let lines = content.split("\n").map(l=>l.trim()).filter(Boolean);
-      if(lines.some(l=>/^[-•]/.test(l))){
-        content = "<ul>" + lines.map(l=>`<li>${l.replace(/^[-•]\s*/,"")}</li>`).join("") + "</ul>";
+      // Split lines into dash lists if they start with "-" or "•"
+      let lines = content.split("\n").map(l => l.trim()).filter(Boolean);
+      if (lines.some(l => /^[-•]/.test(l))) {
+        content = "<ul>" + lines.map(l => `<li>${l.replace(/^[-•]\s*/, "")}</li>`).join("") + "</ul>";
       } else {
-        content = lines.map(l=>`<p>${l}</p>`).join("");
+        content = lines.map(l => `<p>${l}</p>`).join("");
       }
 
-      return `<div class="section-title">${sec}<span class="expand-icon">▶</span></div><div class="section-content">${content}</div>`;
+      return `<div class="section-title">${sec}<span class="expand-icon">▶</span></div>
+              <div class="section-content">${content}</div>`;
     }).join("");
 
-    return `<div class="idea-card fade-in"><h2>Project ${idx+1}: ${name}</h2>${contentHtml}</div>`;
+    return `<div class="idea-card fade-in">
+              <h2>Project ${idx + 1}: ${name}</h2>
+              ${contentHtml}
+            </div>`;
   }).join("");
 }
+
 
 // Attach arrow events
 function attachExpandEvents(){
