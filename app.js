@@ -1,46 +1,38 @@
 // ==== Element handles ====
-const apiKeyInput    = document.getElementById("api-key");
-const promptInput    = document.getElementById("prompt");
-const generateBtn    = document.getElementById("generate");
-const outputDiv      = document.getElementById("output");
-const budgetSlider   = document.getElementById("budget-slider");
-const budgetDisplay  = document.getElementById("budget-display");
-const timeframeSlider= document.getElementById("timeframe-slider");
+const promptInput   = document.getElementById("prompt");
+const generateBtn   = document.getElementById("generate");
+const outputDiv     = document.getElementById("output");
+const budgetSlider  = document.getElementById("budget-slider");
+const budgetDisplay = document.getElementById("budget-display");
+const timeframeSlider = document.getElementById("timeframe-slider");
 const timeframeDisplay = document.getElementById("timeframe-display");
-const techGroup      = document.getElementById("technologies");
-const industryGroup  = document.getElementById("industries");
-const complexityGroup= document.getElementById("complexity");
+const techGroup     = document.getElementById("technologies");
+const industryGroup = document.getElementById("industries");
+const complexityGroup = document.getElementById("complexity");
 const innovationSelect = document.getElementById("innovation");
-const demoSelect     = document.getElementById("demo");
-const extraButtons   = document.getElementById("extra-buttons");
-const expandBtn      = document.getElementById("expand");
-const similarBtn     = document.getElementById("similar");
-const summarizeBtn   = document.getElementById("summarize");
+const demoSelect = document.getElementById("demo");
+const extraButtons  = document.getElementById("extra-buttons");
+const expandBtn     = document.getElementById("expand");
+const similarBtn    = document.getElementById("similar");
+const summarizeBtn  = document.getElementById("summarize");
 
-const DEFAULT_MODEL = "models/gemini-2.5-flash";
-
-// ==== Budget slider ====
+// ==== Slider setup ====
 noUiSlider.create(budgetSlider, {
   start: [100, 1000],
   connect: true,
   range: { min: 0, max: 10000 },
-  step: 50,
-  tooltips: true,
-  format: { to: v => `$${Math.round(v)}`, from: v => Number(v.replace("$","")) }
+  step: 50
 });
 budgetSlider.noUiSlider.on("update", () => {
   const values = budgetSlider.noUiSlider.get(true);
   budgetDisplay.textContent = `Range: $${Math.round(values[0])} – $${Math.round(values[1])}`;
 });
 
-// ==== Timeframe slider ====
 noUiSlider.create(timeframeSlider, {
-  start: [6, 12],
+  start: [1, 12],
   connect: true,
   range: { min: 1, max: 24 },
-  step: 1,
-  tooltips: true,
-  format: { to: v => `${Math.round(v)} mo`, from: v => Number(v.replace(" mo","")) }
+  step: 1
 });
 timeframeSlider.noUiSlider.on("update", () => {
   const values = timeframeSlider.noUiSlider.get(true);
@@ -48,110 +40,138 @@ timeframeSlider.noUiSlider.on("update", () => {
 });
 
 // ==== Helpers ====
-function setOutput(msg, asHTML = false) {
-  outputDiv.innerHTML = asHTML ? msg : `<p>${msg}</p>`;
-}
-function ensureResourceName(name) {
-  return name?.startsWith("models/") ? name : `models/${name}`;
-}
 function getSelected(group) {
-  if (!group) return [];
-  if (group.tagName === "DIV" && group.querySelectorAll("input[type=checkbox]")) {
-    return Array.from(group.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.value);
-  }
-  if (group.tagName === "DIV" && group.querySelectorAll("input[type=radio]")) {
-    const sel = group.querySelector("input[type=radio]:checked");
-    return sel ? [sel.value] : [];
-  }
-  return [];
+  const checkboxes = group?.querySelectorAll("input[type=checkbox]:checked") || [];
+  return Array.from(checkboxes).map(cb => cb.value);
 }
+
+function getSelectedRadio(group) {
+  const radio = group.querySelector("input[type=radio]:checked");
+  return radio ? radio.value : null;
+}
+
 function formatOutput(text) {
-  let cleaned = text.replace(/\|/g, " ").replace(/---+/g, "")
-    .replace(/<\/?table.*?>/gi,"").replace(/<\/?tr.*?>/gi,"").replace(/<\/?td.*?>/gi,"")
-    .replace(/\*\*/g,"").replace(/\*/g,"").replace(/###/g,"").replace(/##/g,"").trim();
-  const ideas = cleaned.split(/Project Idea\s*\d+/i).filter(s => s.trim());
+  let cleaned = text.replace(/\|/g," ")
+                    .replace(/---+/g,"")
+                    .replace(/<\/?table.*?>/gi,"")
+                    .replace(/<\/?tr.*?>/gi,"")
+                    .replace(/<\/?td.*?>/gi,"")
+                    .replace(/\*\*/g,"")
+                    .replace(/\*/g,"")
+                    .replace(/###/g,"")
+                    .replace(/##/g,"")
+                    .trim();
+
+  let ideas = cleaned.split(/Project Idea\s*\d+/i).filter(s => s.trim()).slice(0,3);
+
   return ideas.map((idea, idx) => {
-    let formatted = idea.replace(/(General Description|Required Technologies|Budget Breakdown|Timeframe Breakdown|Complexity|Innovation|Demo Considerations|Similar Products|Novel Elements)/gi,
-      m => `<h3 class="section-title">${m}</h3>`);
+    let formatted = idea.replace(/(General Description|Required Technologies|Budget Breakdown|Timeframe|Similar Products|Novel Elements|Complexity|Demo Considerations)/gi,
+      m => `<h3 class="section-title">${m}</h3>`
+    );
+
     formatted = formatted.replace(/(?:^|\n)[-•]\s*(.+)/g,"<li>$1</li>");
-    if (formatted.includes("<li>")) formatted = `<ul>${formatted}</ul>`;
-    formatted = formatted.replace(/\n{2,}/g,"</p><p>").replace(/\n/g,"<br>");
-    return `<div class="idea-card fade-in"><h2>Project Idea ${idx+1}</h2><p>${formatted}</p></div>`;
+    if(formatted.includes("<li>")) formatted = `<ul>${formatted}</ul>`;
+    formatted = formatted.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>");
+
+    return `
+      <div class="idea-card fade-in">
+        <div class="idea-header">Project Idea ${idx+1}</div>
+        <div class="idea-content">${formatted}</div>
+      </div>
+    `;
   }).join("");
 }
 
-// ==== Generate function ====
-async function generateIdeas(mode="normal") {
-  const prompt = promptInput?.value?.trim();
-  const API_KEY = apiKeyInput?.value?.trim();
-  if (!prompt) { setOutput("⚠️ Please enter a project idea."); return; }
-  if (!API_KEY) { setOutput("⚠️ Please enter your API Key."); return; }
+// ==== Collapsible logic ====
+function setupCollapsible() {
+  const headers = document.querySelectorAll(".idea-header");
+  headers.forEach(header => {
+    header.addEventListener("click", () => {
+      const content = header.nextElementSibling;
+      content.style.display = content.style.display === "block" ? "none" : "block";
+    });
+  });
+}
 
-  const [budgetMin, budgetMax] = budgetSlider.noUiSlider.get(true).map(v => Math.round(v));
-  const [timeMin, timeMax] = timeframeSlider.noUiSlider.get(true).map(v => Math.round(v));
+// ==== Generate ====
+async function generateIdeas(mode="normal") {
+  const prompt = promptInput.value.trim();
+  if(!prompt) {
+    outputDiv.innerHTML = "<p>⚠️ Please enter a prompt before generating ideas.</p>";
+    return;
+  }
+
+  const [budgetMin, budgetMax] = budgetSlider.noUiSlider.get(true).map(v=>Math.round(v));
+  const [timeMin, timeMax] = timeframeSlider.noUiSlider.get(true).map(v=>Math.round(v));
   const selectedTechs = getSelected(techGroup);
   const selectedIndustries = getSelected(industryGroup);
-  const selectedComplexity = getSelected(complexityGroup)[0] || "Medium";
-  const innovation = innovationSelect.value || "College Student Level";
-  const demo = demoSelect.value || "Small Desk";
+  const complexity = getSelectedRadio(complexityGroup);
+  const innovation = innovationSelect.value;
+  const demo = demoSelect.value;
 
   let enhancedPrompt = `
 User idea/constraints: ${prompt}
 Budget range: $${budgetMin} – $${budgetMax}
-Timeframe: ${timeMin} – ${timeMax} months (Research, Development, Hardware setup, Final prototype)
+Timeframe: ${timeMin}-${timeMax} months (Include research, development, hardware setup, final prototype)
 Preferred technologies: ${selectedTechs.join(", ") || "N/A"}
 Industry focus: ${selectedIndustries.join(", ") || "N/A"}
-Complexity: ${selectedComplexity}
+Project Complexity: ${complexity || "N/A"}
 Innovation Level: ${innovation}
 Demo Considerations: ${demo}
 `;
 
-  if (mode === "normal") {
+  if(mode==="normal") {
     enhancedPrompt += `
-Generate 3–5 professional computer engineering project ideas. For each, include:
+Generate up to 3 computer engineering project ideas with:
 - General Description
 - Required Technologies
 - Budget Breakdown
 - Timeframe Breakdown
-- Complexity and possible challenges
-- Innovation level
+- Complexity Challenges
 - Demo Considerations
 - Similar Products
 - Novel Elements`;
-  } else if (mode === "expand") {
-    enhancedPrompt += `Expand the previous ideas with deeper technical details.`;
-  } else if (mode === "similar") {
-    enhancedPrompt += `Generate 3–5 related variations of the previous ideas.`;
-  } else if (mode === "summarize") {
-    enhancedPrompt += `Summarize the previous ideas into concise bullet points.`;
   }
 
-  setOutput("⏳ Generating ideas...");
+  outputDiv.innerHTML = "<p>⏳ Generating ideas...</p>";
   extraButtons.classList.remove("hidden");
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${ensureResourceName(DEFAULT_MODEL)}:generateContent`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": API_KEY },
+    const API_KEY = document.getElementById("api-key").value.trim();
+    if(!API_KEY) {
+      outputDiv.innerHTML = "<p>⚠️ Please enter your API Key to generate results.</p>";
+      return;
+    }
+
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, {
+      method:"POST",
+      headers: { "Content-Type":"application/json", "x-goog-api-key": API_KEY },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: enhancedPrompt }] }],
-        generationConfig: { temperature: 0.7 }
+        contents:[{parts:[{text:enhancedPrompt}]}],
+        generationConfig: { temperature:0.7 }
       })
     });
 
     const data = await res.json();
-    if (data.error) { setOutput(`❌ API Error: ${data.error.message}`); return; }
+    if(data.error) {
+      outputDiv.innerHTML = `<p>❌ API Error: ${data.error.message}</p>`;
+      return;
+    }
 
     const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("").trim();
-    if (text) { setOutput(formatOutput(text), true); }
-    else { setOutput("⚠️ No response from Gemini."); }
+    if(text) {
+      outputDiv.innerHTML = formatOutput(text);
+      setupCollapsible();
+    } else {
+      outputDiv.innerHTML = "<p>⚠️ No response from Gemini.</p>";
+    }
   } catch {
-    setOutput("❌ Network or fetch error.");
+    outputDiv.innerHTML = "<p>❌ Network or fetch error.</p>";
   }
 }
 
 // ==== Button events ====
-generateBtn?.addEventListener("click", () => generateIdeas("normal"));
-expandBtn?.addEventListener("click", () => generateIdeas("expand"));
-similarBtn?.addEventListener("click", () => generateIdeas("similar"));
-summarizeBtn?.addEventListener("click", () => generateIdeas("summarize"));
+generateBtn.addEventListener("click", ()=>generateIdeas("normal"));
+expandBtn.addEventListener("click", ()=>generateIdeas("expand"));
+similarBtn.addEventListener("click", ()=>generateIdeas("similar"));
+summarizeBtn.addEventListener("click", ()=>generateIdeas("summarize"));
