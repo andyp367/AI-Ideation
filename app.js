@@ -1,126 +1,68 @@
-// ==== Element handles ====
-const promptInput   = document.getElementById("prompt");
-const generateBtn   = document.getElementById("generate");
-const outputDiv     = document.getElementById("output");
-const budgetSlider  = document.getElementById("budget-slider");
-const budgetDisplay = document.getElementById("budget-display");
-const techGroup     = document.getElementById("technologies");
+const apiKeyInput = document.getElementById("api-key");
+const promptInput = document.getElementById("prompt");
+const budgetMinInput = document.getElementById("budget-min");
+const budgetMaxInput = document.getElementById("budget-max");
+const budgetMinDisplay = document.getElementById("budget-min-display");
+const budgetMaxDisplay = document.getElementById("budget-max-display");
+const techGroup = document.getElementById("technologies");
 const industryGroup = document.getElementById("industries");
-const extraButtons  = document.getElementById("extra-buttons");
-const expandBtn     = document.getElementById("expand");
-const similarBtn    = document.getElementById("similar");
-const summarizeBtn  = document.getElementById("summarize");
-const timeframeGroup = document.getElementById("timeframe");
+const timeframeMinInput = document.getElementById("timeframe-min");
+const timeframeMaxInput = document.getElementById("timeframe-max");
 const complexityGroup = document.getElementById("complexity");
 const innovationSelect = document.getElementById("innovation");
 const demoSelect = document.getElementById("demo-space");
+const resultsDiv = document.getElementById("results");
 
-// ==== Your API key ====
-const API_KEY = "YOUR_API_KEY_HERE"; 
-const DEFAULT_MODEL = "models/gemini-2.5-flash";
-
-// ==== Budget slider setup ====
-noUiSlider.create(budgetSlider, {
-  start: [100, 1000],
-  connect: true,
-  range: { min: 0, max: 10000 },
-  step: 50,
-  tooltips: true,
-  format: {
-    to: v => `$${Math.round(v)}`,
-    from: v => Number(v.replace("$", ""))
-  }
+// Save/reload API key from localStorage
+apiKeyInput.value = localStorage.getItem("openai_api_key") || "";
+apiKeyInput.addEventListener("change", () => {
+  localStorage.setItem("openai_api_key", apiKeyInput.value.trim());
 });
 
-function getBudgetRange() {
-  const values = budgetSlider.noUiSlider.get(true);
-  return [Math.round(values[0]), Math.round(values[1])];
-}
+// Update budget slider displays
+budgetMinDisplay.textContent = budgetMinInput.value;
+budgetMaxDisplay.textContent = budgetMaxInput.value;
 
-budgetSlider.noUiSlider.on("update", () => {
-  const [min, max] = getBudgetRange();
-  budgetDisplay.textContent = `Range: $${min} – $${max}`;
+budgetMinInput.addEventListener("input", () => {
+  budgetMinDisplay.textContent = budgetMinInput.value;
+});
+budgetMaxInput.addEventListener("input", () => {
+  budgetMaxDisplay.textContent = budgetMaxInput.value;
 });
 
-// ==== Helpers ====
-function setOutput(msg, asHTML = false) {
-  outputDiv.innerHTML = asHTML ? msg : `<p>${msg}</p>`;
-}
-
-function ensureResourceName(name) {
-  return name?.startsWith("models/") ? name : `models/${name}`;
-}
-
-function getSelected(group) {
-  const checkboxes = group?.querySelectorAll("input[type=checkbox]:checked") || [];
-  return Array.from(checkboxes).map(cb => cb.value);
+function getSelectedCheckboxes(group) {
+  return Array.from(group.querySelectorAll("input[type=checkbox]:checked")).map(el => el.value);
 }
 
 function getSelectedRadio(group) {
-  const selected = group?.querySelector("input[type=radio]:checked");
+  const selected = group.querySelector("input[type=radio]:checked");
   return selected ? selected.value : "N/A";
 }
 
-// Clean + structure AI output
-function formatOutput(text) {
-  let cleaned = text
-    .replace(/\|/g, " ")
-    .replace(/---+/g, "")
-    .replace(/<\/?table.*?>/gi, "")
-    .replace(/<\/?tr.*?>/gi, "")
-    .replace(/<\/?td.*?>/gi, "")
-    .replace(/\*\*/g, "")
-    .replace(/\*/g, "")
-    .replace(/###/g, "")
-    .replace(/##/g, "")
-    .trim();
-
-  const ideas = cleaned.split(/Project Idea\s*\d+/i).filter(s => s.trim());
-
-  return ideas.map((idea, idx) => {
-    let formatted = idea.replace(
-      /(General Description|Required Technologies|Budget Breakdown|Timeframe Breakdown|Complexity & Challenges|Similar Products|Novel Elements|Demo Considerations)/gi,
-      m => `<h3 class="section-title">${m}</h3>`
-    );
-
-    formatted = formatted.replace(/(?:^|\n)[-•]\s*(.+)/g, "<li>$1</li>");
-    if (formatted.includes("<li>")) {
-      formatted = `<ul>${formatted}</ul>`;
-    }
-
-    formatted = formatted.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>");
-
-    return `
-      <div class="idea-card fade-in">
-        <h2>Project Idea ${idx + 1}</h2>
-        <p>${formatted}</p>
-      </div>
-    `;
-  }).join("");
-}
-
-// ==== Generate function ====
 async function generateIdeas(mode = "normal") {
-  const prompt = promptInput?.value?.trim();
-  if (!prompt) {
-    setOutput("⚠️ Please enter a prompt before generating ideas.");
+  const apiKey = apiKeyInput.value.trim();
+  if (!apiKey) {
+    alert("Please enter your OpenAI API Key.");
     return;
   }
 
-  const [budgetMin, budgetMax] = getBudgetRange();
-  const selectedTechs = getSelected(techGroup);
-  const selectedIndustries = getSelected(industryGroup);
-  const selectedTimeframe = getSelectedRadio(timeframeGroup);
+  const prompt = promptInput.value.trim();
+  const budgetMin = budgetMinInput.value || "N/A";
+  const budgetMax = budgetMaxInput.value || "N/A";
+  const selectedTechs = getSelectedCheckboxes(techGroup);
+  const selectedIndustries = getSelectedCheckboxes(industryGroup);
+  const timeframeMin = timeframeMinInput.value || "N/A";
+  const timeframeMax = timeframeMaxInput.value || "N/A";
   const selectedComplexity = getSelectedRadio(complexityGroup);
-  const innovationLevel = innovationSelect?.value || "N/A";
-  const demoSpace = demoSelect?.value || "N/A";
+  const innovationLevel = innovationSelect.value;
+  const demoSpace = demoSelect.value;
 
   let enhancedPrompt = `
 User idea/constraints: ${prompt}
 Budget range: $${budgetMin} – $${budgetMax}
 Preferred technologies: ${selectedTechs.join(", ") || "N/A"}
 Industry focus: ${selectedIndustries.join(", ") || "N/A"}
-Expected timeframe: ${selectedTimeframe}
+Expected timeframe: ${timeframeMin}–${timeframeMax} months
 Complexity level: ${selectedComplexity}
 Innovation level: ${innovationLevel}
 Demo space: ${demoSpace}
@@ -135,55 +77,39 @@ Generate 3–5 computer engineering project ideas. For each, provide:
 - Timeframe Breakdown (research, development, hardware setup, final prototype)
 - Complexity & Challenges
 - Similar Products
-- Novel Elements (what’s unique)
-- Demo Considerations (how it fits the chosen demo space)`;
-  } else if (mode === "expand") {
-    enhancedPrompt += `Expand the previous ideas with deeper technical details.`;
-  } else if (mode === "similar") {
-    enhancedPrompt += `Generate 3–5 related variations of the previous ideas.`;
-  } else if (mode === "summarize") {
-    enhancedPrompt += `Summarize the previous ideas into concise bullet points.`;
+- Novel Elements
+- Demo Considerations`;
+  } else {
+    enhancedPrompt += `
+Provide a highly detailed technical project proposal, including:
+- Architecture diagrams (described textually)
+- Step-by-step implementation plan
+- Hardware/software requirements
+- Potential pitfalls & debugging strategies
+- Scalability and future improvements`;
   }
 
-  setOutput("⏳ Generating ideas...");
-  extraButtons.classList.remove("hidden");
-
+  resultsDiv.textContent = "⏳ Generating ideas...";
+  
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/${ensureResourceName(DEFAULT_MODEL)}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": API_KEY
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: enhancedPrompt }] }],
-          generationConfig: { temperature: 0.7 }
-        })
-      }
-    );
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-5",
+        messages: [{ role: "user", content: enhancedPrompt }]
+      })
+    });
 
-    const data = await res.json();
-
-    if (data.error) {
-      setOutput(`❌ API Error: ${data.error.message}`);
-      return;
-    }
-
-    const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("").trim();
-    if (text) {
-      setOutput(formatOutput(text), true);
-    } else {
-      setOutput("⚠️ No response from Gemini.");
-    }
-  } catch {
-    setOutput("❌ Network or fetch error.");
+    const data = await response.json();
+    resultsDiv.textContent = data.choices?.[0]?.message?.content || "⚠️ No response.";
+  } catch (err) {
+    resultsDiv.textContent = "❌ Error: " + err.message;
   }
 }
 
-// ==== Button events ====
-generateBtn?.addEventListener("click", () => generateIdeas("normal"));
-expandBtn?.addEventListener("click", () => generateIdeas("expand"));
-similarBtn?.addEventListener("click", () => generateIdeas("similar"));
-summarizeBtn?.addEventListener("click", () => generateIdeas("summarize"));
+document.getElementById("generate-normal").addEventListener("click", () => generateIdeas("normal"));
+document.getElementById("generate-advanced").addEventListener("click", () => generateIdeas("advanced"));
