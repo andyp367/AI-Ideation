@@ -81,32 +81,53 @@ Generate up to 3 computer engineering project ideas. For each, provide:
 
 // Format output
 function formatOutput(text){
-  let cleaned=text.replace(/\|/g," ").replace(/---+/g,"").replace(/<\/?table.*?>/gi,"").replace(/<\/?tr.*?>/gi,"").replace(/<\/?td.*?>/gi,"").replace(/\*\*/g,"").replace(/\*/g,"").replace(/###/g,"").replace(/##/g,"").trim();
+  text = text.replace(/\|/g," ").replace(/---+/g,"").replace(/<\/?[^>]+>/gi,"").trim();
 
-  const ideas=cleaned.split(/Project\s*Idea\s*\d+/i).filter(s=>s.trim()).slice(0,3);
+  // Split by "Project" but always ensure at least 3 projects
+  let ideaMatches = text.split(/Project\s*Idea\s*\d+/i).filter(s=>s.trim());
+  if(ideaMatches.length===0) ideaMatches=[text]; // fallback to entire text if split fails
+  ideaMatches = ideaMatches.slice(0,3); // max 3 projects
 
-  return ideas.map((idea,idx)=>{
+  return ideaMatches.map((idea,idx)=>{
     let lines=idea.split("\n").map(l=>l.trim()).filter(Boolean);
-    let name=lines.find(l=>/Name/i.test(l))?.split(":")[1]?.trim()||`Unnamed Project`;
-    let sections=["General Description","Required Technologies & Budget Breakdown","Timeframe Breakdown","Complexity & Skills Needed","Similar Products","Novel Elements"];
-    let contentHtml=sections.map(sec=>{
-      let regex=new RegExp(sec+"\\s*:?\\s*([\\s\\S]*?)($|"+sections.join("|")+")","i");
-      let match=text.match(regex);
-      let content=match ? match[1].trim().replace(/\n[-•]\s*/g,"- ").replace(/\n/g," ") : "N/A";
+    let nameLine = lines.find(l=>/Name/i.test(l));
+    let name = nameLine ? nameLine.split(":")[1]?.trim() : `Unnamed Project`;
+
+    // Sections
+    let sections = ["General Description","Required Technologies & Budget Breakdown","Timeframe Breakdown","Complexity & Skills Needed","Similar Products","Novel Elements"];
+    let contentHtml = sections.map(sec=>{
+      let regex = new RegExp(sec+"\\s*:?\\s*([\\s\\S]*?)($|"+sections.join("|")+")","i");
+      let match = idea.match(regex);
+      let content = match ? match[1].trim() : "N/A";
+
+      // Format lists
+      let lines = content.split("\n").map(l=>l.trim()).filter(Boolean);
+      if(lines.some(l=>/^[-•]/.test(l))){
+        content = "<ul>" + lines.map(l=>`<li>${l.replace(/^[-•]\s*/,"")}</li>`).join("") + "</ul>";
+      } else {
+        content = lines.map(l=>`<p>${l}</p>`).join("");
+      }
+
       return `<div class="section-title">${sec}<span class="expand-icon">▶</span></div><div class="section-content">${content}</div>`;
     }).join("");
+
     return `<div class="idea-card fade-in"><h2>Project ${idx+1}: ${name}</h2>${contentHtml}</div>`;
   }).join("");
 }
 
-// Arrow expand
+// Attach arrow events
 function attachExpandEvents(){
   document.querySelectorAll(".section-title").forEach(title=>{
-    const icon=title.querySelector(".expand-icon");
-    const content=title.nextElementSibling;
+    const icon = title.querySelector(".expand-icon");
+    const content = title.nextElementSibling;
     title.addEventListener("click",()=>{
-      content.style.display=content.style.display==="block"?"none":"block";
-      icon.classList.toggle("open");
+      if(content.style.display==="block"){
+        content.style.display="none";
+        icon.classList.remove("open");
+      } else {
+        content.style.display="block";
+        icon.classList.add("open");
+      }
     });
   });
 }
