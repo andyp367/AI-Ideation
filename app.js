@@ -12,7 +12,7 @@ const similarBtn    = document.getElementById("similar");
 const summarizeBtn  = document.getElementById("summarize");
 
 // ==== Your API key ====
-const API_KEY = "AIzaSyDz7PsTucT9WAhsbBt-s67Y54GqZ6QIuf4"; // keep yours here
+const API_KEY = "AIzaSyAkZln6wub-D0IN3RhKZ-4MMOzN3C_1-jI"; // keep yours here
 const DEFAULT_MODEL = "models/gemini-2.5-flash";
 
 // ==== Budget slider setup ====
