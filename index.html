@@ -1,106 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Project Idea Generator</title>
-  <link rel="stylesheet" href="style.css"/>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CE Project Ideator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
 </head>
 <body>
   <div class="container">
-    <!-- Input Section -->
-    <div class="card input-card">
-      <h1><i data-lucide="cpu"></i> Project Idea Generator</h1>
+    <h1>Computer Engineering Project Ideator</h1>
 
-      <label><i data-lucide="key"></i> API Key:</label>
-      <input type="password" id="api-key" placeholder="Enter your OpenAI API Key"/>
+    <label for="prompt">Enter your project idea or constraints:</label>
+    <textarea id="prompt" placeholder="e.g., Embedded systems with sensors and low power usage..."></textarea>
 
-      <label><i data-lucide="lightbulb"></i> Idea or Constraints:</label>
-      <textarea id="prompt" placeholder="E.g. IoT device for home automation"></textarea>
+    <label>Budget Range (USD):</label>
+    <div id="budget-slider"></div>
+    <div id="budget-display">Range: $100 – $1000</div>
 
-      <label><i data-lucide="dollar-sign"></i> Budget Range ($):</label>
-      <input type="range" id="budget-min" min="0" max="5000" step="50" value="500">
-      <span id="budget-min-display">500</span> –
-      <input type="range" id="budget-max" min="0" max="5000" step="50" value="1500">
-      <span id="budget-max-display">1500</span>
-
-      <label><i data-lucide="tool"></i> Preferred Technologies:</label>
-      <div class="checkbox-group" id="technologies">
-        <label><input type="checkbox" value="Python"> Python</label>
-        <label><input type="checkbox" value="C++"> C++</label>
-        <label><input type="checkbox" value="C"> C</label>
-        <label><input type="checkbox" value="VHDL/Verilog"> VHDL/Verilog</label>
-        <label><input type="checkbox" value="MATLAB"> MATLAB</label>
-        <label><input type="checkbox" value="FPGA"> FPGA</label>
-        <label><input type="checkbox" value="Raspberry Pi"> Raspberry Pi</label>
-        <label><input type="checkbox" value="Arduino"> Arduino</label>
-        <label><input type="checkbox" value="Embedded C"> Embedded C</label>
-        <label><input type="checkbox" value="PCB Design"> PCB Design</label>
-      </div>
-
-      <label><i data-lucide="building"></i> Industry Focus:</label>
-      <div class="checkbox-group" id="industries">
-        <label><input type="checkbox" value="Healthcare"> Healthcare</label>
-        <label><input type="checkbox" value="Automotive"> Automotive</label>
-        <label><input type="checkbox" value="Aerospace/Defense"> Aerospace/Defense</label>
-        <label><input type="checkbox" value="Robotics"> Robotics</label>
-        <label><input type="checkbox" value="IoT"> IoT</label>
-        <label><input type="checkbox" value="Consumer Electronics"> Consumer Electronics</label>
-        <label><input type="checkbox" value="Telecommunications"> Telecommunications</label>
-        <label><input type="checkbox" value="Energy/Power Systems"> Energy/Power Systems</label>
-      </div>
-
-      <label><i data-lucide="calendar"></i> Project Timeframe (Months):</label>
-      <div class="row">
-        <div class="half">
-          <input type="number" id="timeframe-min" min="1" max="24" placeholder="Min"/>
-        </div>
-        <div class="half">
-          <input type="number" id="timeframe-max" min="1" max="24" placeholder="Max"/>
-        </div>
-      </div>
-
-      <label><i data-lucide="activity"></i> Complexity Level:</label>
-      <div id="complexity" class="radio-group">
-        <label><input type="radio" name="complexity" value="Beginner"> Beginner</label>
-        <label><input type="radio" name="complexity" value="Intermediate"> Intermediate</label>
-        <label><input type="radio" name="complexity" value="Advanced"> Advanced</label>
-        <label><input type="radio" name="complexity" value="Cutting-edge"> Cutting-edge</label>
-      </div>
-
-      <label><i data-lucide="zap"></i> Innovation Level:</label>
-      <select id="innovation">
-        <option value="College Student">College Student</option>
-        <option value="Engineering Professional">Engineering Professional</option>
-        <option value="Large Tech Corporate">Large Tech Corporate</option>
-        <option value="Research Lab">Research Lab</option>
-      </select>
-
-      <label><i data-lucide="monitor"></i> Demo Space Considerations:</label>
-      <select id="demo-space">
-        <option value="Small desk space">Small desk space</option>
-        <option value="Medium classroom space">Medium classroom space</option>
-        <option value="Large auditorium/trade show">Large auditorium / trade show</option>
-      </select>
-
-      <div class="row">
-        <button id="generate-normal"><i data-lucide="sparkles"></i> Generate Ideas</button>
-        <button id="generate-advanced"><i data-lucide="layers"></i> Advanced Mode</button>
-      </div>
+    <label>Relevant Technologies:</label>
+    <div id="technologies" class="checkbox-group">
+      <label><input type="checkbox" value="Embedded Systems"> Embedded Systems</label>
+      <label><input type="checkbox" value="IoT"> IoT</label>
+      <label><input type="checkbox" value="AI/ML"> AI/ML</label>
+      <label><input type="checkbox" value="Robotics"> Robotics</label>
+      <label><input type="checkbox" value="Networking"> Networking</label>
+      <label><input type="checkbox" value="FPGA"> FPGA</label>
+      <label><input type="checkbox" value="Cloud"> Cloud</label>
+      <label><input type="checkbox" value="Smart Device"> Smart Device</label>
+      <label><input type="checkbox" value="Cybersecurity"> Cybersecurity</label>
+      <label><input type="checkbox" value="RF"> RF</label>
+      <label><input type="checkbox" value="Biomedical"> Biomedical</label>
+      <label><input type="checkbox" value="AR/VR"> AR/VR</label>
+      <label><input type="checkbox" value="Software Application"> Software Application</label>
     </div>
 
-    <!-- Output Section -->
-    <div class="card output-card">
-      <h2><i data-lucide="list"></i> Results</h2>
-      <div id="results">Your project ideas will appear here...</div>
+    <label>Industry Focus:</label>
+    <div id="industries" class="checkbox-group">
+      <label><input type="checkbox" value="Defense"> Defense</label>
+      <label><input type="checkbox" value="Automotive"> Automotive</label>
+      <label><input type="checkbox" value="Aerospace"> Aerospace</label>
+      <label><input type="checkbox" value="Healthcare"> Healthcare</label>
+      <label><input type="checkbox" value="Energy"> Energy</label>
+      <label><input type="checkbox" value="Industrial"> Industrial</label>
+      <label><input type="checkbox" value="Consumer"> Consumer</label>
     </div>
+
+    <button id="generate" class="primary-btn">Generate Ideas</button>
+
+    <div id="extra-buttons" class="extra-buttons hidden">
+      <button id="expand">Expand Details</button>
+      <button id="similar">Similar Ideas</button>
+      <button id="summarize">Summarize</button>
+    </div>
+
+    <div id="output" class="output-box"></div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
   <script src="app.js"></script>
-  <script>
-    lucide.createIcons();
-  </script>
 </body>
 </html>
