@@ -1,84 +1,146 @@
-body { 
-  font-family: Arial, sans-serif; 
-  max-width: 700px; 
-  margin: auto; 
-  padding: 20px; 
-  background: #fafafa;
+/* Global */
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #141e30, #243b55);
+  color: #eee;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
 }
-h1, h2 { text-align: center; }
-.config, .form-section {
-  background: #fff;
-  padding: 15px;
-  margin: 15px 0;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+/* Container */
+.container {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  margin: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  width: 100%;
+  max-width: 900px;
+  color: #fff;
 }
-label { 
-  font-weight: bold; 
-  margin-top: 10px; 
-  display: block; 
+
+h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
 }
-input[type="text"], 
-input[type="number"], 
-select, 
+
+/* Inputs */
+label {
+  display: block;
+  margin: 1rem 0 0.5rem;
+  font-weight: 600;
+}
+
 textarea {
   width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  margin: 8px 0;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-}
-textarea { resize: vertical; min-height: 80px; }
-.focus-areas {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 8px;
-  margin-top: 8px;
-}
-.focus-areas label {
-  font-weight: normal;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f9f9f9;
-  padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-button {
-  display: block;
-  width: 100%;
-  padding: 12px;
-  background: #0073e6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-top: 15px;
-}
-button:hover { background: #005bb5; }
-
-/* AI Output Styling */
-#output {
-  margin-top: 20px;
-  padding: 20px;
-  background: #e8f0fe;
-  border-left: 5px solid #4285f4;
+  height: 120px;
   border-radius: 10px;
-  font-size: 15px;
-  line-height: 1.6;
-  white-space: normal;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border: none;
+  padding: 12px;
+  font-size: 1rem;
+  margin-bottom: 1rem;
 }
-#output h3 { margin: 0 0 5px 0; color: #1a73e8; }
-#output ul { margin: 5px 0 15px 20px; }
-#output li { margin-bottom: 5px; }
-#output .idea-card {
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px dashed #c0c0c0;
+
+/* Budget slider */
+#budget-slider {
+  margin: 1rem 0;
+}
+#budget-display {
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+/* Checkboxes */
+.checkbox-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+}
+
+/* Radio buttons */
+.radio-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+/* Select dropdown */
+select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+/* Buttons */
+button {
+  background: #00c6ff;
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  margin: 0.3rem;
+  transition: transform 0.2s, background 0.3s;
+}
+button:hover {
+  background: #0072ff;
+  transform: translateY(-2px);
+}
+.primary-btn {
+  display: block;
+  margin: 1rem auto;
+  font-size: 1.05rem;
+}
+.extra-buttons {
+  text-align: center;
+  margin-top: 1rem;
+}
+.extra-buttons.hidden {
+  display: none;
+}
+
+/* Output */
+.output-box {
+  margin-top: 2rem;
+  padding: 1rem;
+}
+
+.idea-card {
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  animation: fadeIn 0.6s ease;
+}
+.idea-card h2 {
+  margin-top: 0;
+  color: #00c6ff;
+}
+.section-title {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: #ffd700;
+  border-bottom: 1px solid #444;
+  padding-bottom: 0.3rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn 0.7s ease;
 }

@@ -1,52 +1,189 @@
-async function generateIdeas() {
-  const apiKey = document.getElementById("apiKey").value.trim();
-  if (!apiKey) {
-    alert("Please enter your Gemini API key in the Configuration section.");
+// ==== Element handles ====
+const promptInput   = document.getElementById("prompt");
+const generateBtn   = document.getElementById("generate");
+const outputDiv     = document.getElementById("output");
+const budgetSlider  = document.getElementById("budget-slider");
+const budgetDisplay = document.getElementById("budget-display");
+const techGroup     = document.getElementById("technologies");
+const industryGroup = document.getElementById("industries");
+const extraButtons  = document.getElementById("extra-buttons");
+const expandBtn     = document.getElementById("expand");
+const similarBtn    = document.getElementById("similar");
+const summarizeBtn  = document.getElementById("summarize");
+const timeframeGroup = document.getElementById("timeframe");
+const complexityGroup = document.getElementById("complexity");
+const innovationSelect = document.getElementById("innovation");
+const demoSelect = document.getElementById("demo-space");
+
+// ==== Your API key ====
+const API_KEY = "YOUR_API_KEY_HERE"; 
+const DEFAULT_MODEL = "models/gemini-2.5-flash";
+
+// ==== Budget slider setup ====
+noUiSlider.create(budgetSlider, {
+  start: [100, 1000],
+  connect: true,
+  range: { min: 0, max: 10000 },
+  step: 50,
+  tooltips: true,
+  format: {
+    to: v => `$${Math.round(v)}`,
+    from: v => Number(v.replace("$", ""))
+  }
+});
+
+function getBudgetRange() {
+  const values = budgetSlider.noUiSlider.get(true);
+  return [Math.round(values[0]), Math.round(values[1])];
+}
+
+budgetSlider.noUiSlider.on("update", () => {
+  const [min, max] = getBudgetRange();
+  budgetDisplay.textContent = `Range: $${min} – $${max}`;
+});
+
+// ==== Helpers ====
+function setOutput(msg, asHTML = false) {
+  outputDiv.innerHTML = asHTML ? msg : `<p>${msg}</p>`;
+}
+
+function ensureResourceName(name) {
+  return name?.startsWith("models/") ? name : `models/${name}`;
+}
+
+function getSelected(group) {
+  const checkboxes = group?.querySelectorAll("input[type=checkbox]:checked") || [];
+  return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function getSelectedRadio(group) {
+  const selected = group?.querySelector("input[type=radio]:checked");
+  return selected ? selected.value : "N/A";
+}
+
+// Clean + structure AI output
+function formatOutput(text) {
+  let cleaned = text
+    .replace(/\|/g, " ")
+    .replace(/---+/g, "")
+    .replace(/<\/?table.*?>/gi, "")
+    .replace(/<\/?tr.*?>/gi, "")
+    .replace(/<\/?td.*?>/gi, "")
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/###/g, "")
+    .replace(/##/g, "")
+    .trim();
+
+  const ideas = cleaned.split(/Project Idea\s*\d+/i).filter(s => s.trim());
+
+  return ideas.map((idea, idx) => {
+    let formatted = idea.replace(
+      /(General Description|Required Technologies|Budget Breakdown|Timeframe Breakdown|Complexity & Challenges|Similar Products|Novel Elements|Demo Considerations)/gi,
+      m => `<h3 class="section-title">${m}</h3>`
+    );
+
+    formatted = formatted.replace(/(?:^|\n)[-•]\s*(.+)/g, "<li>$1</li>");
+    if (formatted.includes("<li>")) {
+      formatted = `<ul>${formatted}</ul>`;
+    }
+
+    formatted = formatted.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>");
+
+    return `
+      <div class="idea-card fade-in">
+        <h2>Project Idea ${idx + 1}</h2>
+        <p>${formatted}</p>
+      </div>
+    `;
+  }).join("");
+}
+
+// ==== Generate function ====
+async function generateIdeas(mode = "normal") {
+  const prompt = promptInput?.value?.trim();
+  if (!prompt) {
+    setOutput("⚠️ Please enter a prompt before generating ideas.");
     return;
   }
 
-  const focusAreas = Array.from(document.querySelectorAll(".focus-areas input:checked"))
-                         .map(cb => cb.value);
+  const [budgetMin, budgetMax] = getBudgetRange();
+  const selectedTechs = getSelected(techGroup);
+  const selectedIndustries = getSelected(industryGroup);
+  const selectedTimeframe = getSelectedRadio(timeframeGroup);
+  const selectedComplexity = getSelectedRadio(complexityGroup);
+  const innovationLevel = innovationSelect?.value || "N/A";
+  const demoSpace = demoSelect?.value || "N/A";
 
-  const data = {
-    apiKey: apiKey,
-    problem: document.getElementById("problem").value,
-    difficulty: document.getElementById("difficulty").value,
-    cost: document.getElementById("cost").value,
-    complexity: document.getElementById("complexity").value,
-    focus: focusAreas
-  };
+  let enhancedPrompt = `
+User idea/constraints: ${prompt}
+Budget range: $${budgetMin} – $${budgetMax}
+Preferred technologies: ${selectedTechs.join(", ") || "N/A"}
+Industry focus: ${selectedIndustries.join(", ") || "N/A"}
+Expected timeframe: ${selectedTimeframe}
+Complexity level: ${selectedComplexity}
+Innovation level: ${innovationLevel}
+Demo space: ${demoSpace}
+`;
 
-  const outputEl = document.getElementById("output");
-  outputEl.innerHTML = "<strong>🤖 Generating ideas...</strong>";
+  if (mode === "normal") {
+    enhancedPrompt += `
+Generate 3–5 computer engineering project ideas. For each, provide:
+- General Description
+- Required Technologies
+- Budget Breakdown
+- Timeframe Breakdown (research, development, hardware setup, final prototype)
+- Complexity & Challenges
+- Similar Products
+- Novel Elements (what’s unique)
+- Demo Considerations (how it fits the chosen demo space)`;
+  } else if (mode === "expand") {
+    enhancedPrompt += `Expand the previous ideas with deeper technical details.`;
+  } else if (mode === "similar") {
+    enhancedPrompt += `Generate 3–5 related variations of the previous ideas.`;
+  } else if (mode === "summarize") {
+    enhancedPrompt += `Summarize the previous ideas into concise bullet points.`;
+  }
+
+  setOutput("⏳ Generating ideas...");
+  extraButtons.classList.remove("hidden");
 
   try {
-    const res = await fetch("https://your-serverless-api-url.com/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/${ensureResourceName(DEFAULT_MODEL)}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": API_KEY
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: enhancedPrompt }] }],
+          generationConfig: { temperature: 0.7 }
+        })
+      }
+    );
 
-    const result = await res.json();
+    const data = await res.json();
 
-    if (result.ideas && result.ideas.length > 0) {
-      outputEl.innerHTML = "";
-      result.ideas.forEach((idea, idx) => {
-        const card = document.createElement("div");
-        card.className = "idea-card";
-        card.innerHTML = `
-          <h3>${idx+1}. ${idea.title}</h3>
-          <ul>
-            <li><strong>Description:</strong> ${idea.description}</li>
-            <li><strong>Feasibility:</strong> ${idea.feasibility}</li>
-          </ul>
-        `;
-        outputEl.appendChild(card);
-      });
-    } else {
-      outputEl.innerHTML = "<strong>⚠️ No ideas generated. Check your input or API response.</strong>";
+    if (data.error) {
+      setOutput(`❌ API Error: ${data.error.message}`);
+      return;
     }
-  } catch (err) {
-    outputEl.innerHTML = `<strong>⚠️ Error generating ideas:</strong> ${err.message}`;
+
+    const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("").trim();
+    if (text) {
+      setOutput(formatOutput(text), true);
+    } else {
+      setOutput("⚠️ No response from Gemini.");
+    }
+  } catch {
+    setOutput("❌ Network or fetch error.");
   }
 }
+
+// ==== Button events ====
+generateBtn?.addEventListener("click", () => generateIdeas("normal"));
+expandBtn?.addEventListener("click", () => generateIdeas("expand"));
+similarBtn?.addEventListener("click", () => generateIdeas("similar"));
+summarizeBtn?.addEventListener("click", () => generateIdeas("summarize"));

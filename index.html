@@ -1,60 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>AI Project Idea Generator</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CE Project Ideator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
 </head>
 <body>
-  <h1>Computer Engineering Project Idea Generator</h1>
+  <div class="container">
+    <h1>Computer Engineering Project Ideator</h1>
 
-  <!-- API Key Config Section -->
-  <div class="config">
-    <h2>Configuration</h2>
-    <label for="apiKey">Gemini API Key:</label>
-    <input type="text" id="apiKey" placeholder="Enter your Gemini API key here" />
-  </div>
+    <label for="prompt">Enter your project idea or constraints:</label>
+    <textarea id="prompt" placeholder="e.g., Embedded systems with sensors and low power usage..."></textarea>
 
-  <!-- Parameters Form -->
-  <div class="form-section">
-    <label for="problem">Problem Statement:</label>
-    <textarea id="problem"></textarea>
-    
-    <label for="difficulty">Difficulty:</label>
-    <select id="difficulty">
-      <option>Beginner</option>
-      <option>Intermediate</option>
-      <option>Advanced</option>
-    </select>
+    <label>Budget Range (USD):</label>
+    <div id="budget-slider"></div>
+    <div id="budget-display">Range: $100 – $1000</div>
 
-    <label for="cost">Cost ($):</label>
-    <input type="number" id="cost" />
-
-    <label for="complexity">Complexity:</label>
-    <select id="complexity">
-      <option>Low</option>
-      <option>Moderate</option>
-      <option>High</option>
-    </select>
-
-    <label>Focus Areas:</label>
-    <div class="focus-areas">
-      <label><input type="checkbox" value="Cybersecurity"> Cybersecurity</label>
-      <label><input type="checkbox" value="IoT"> IoT</label>
-      <label><input type="checkbox" value="PCB"> PCB</label>
-      <label><input type="checkbox" value="AI/ML"> AI/ML</label>
+    <label>Relevant Technologies:</label>
+    <div id="technologies" class="checkbox-group">
       <label><input type="checkbox" value="Embedded Systems"> Embedded Systems</label>
+      <label><input type="checkbox" value="IoT"> IoT</label>
+      <label><input type="checkbox" value="AI/ML"> AI/ML</label>
       <label><input type="checkbox" value="Robotics"> Robotics</label>
-      <label><input type="checkbox" value="FPGA"> FPGA</label>
       <label><input type="checkbox" value="Networking"> Networking</label>
-      <label><input type="checkbox" value="Cloud Computing"> Cloud Computing</label>
-      <label><input type="checkbox" value="Hardware Design"> Hardware Design</label>
+      <label><input type="checkbox" value="FPGA"> FPGA</label>
+      <label><input type="checkbox" value="Cloud"> Cloud</label>
+      <label><input type="checkbox" value="Smart Device"> Smart Device</label>
+      <label><input type="checkbox" value="Cybersecurity"> Cybersecurity</label>
+      <label><input type="checkbox" value="RF"> RF</label>
+      <label><input type="checkbox" value="Biomedical"> Biomedical</label>
+      <label><input type="checkbox" value="AR/VR"> AR/VR</label>
+      <label><input type="checkbox" value="Software Application"> Software Application</label>
     </div>
+
+    <label>Industry Focus:</label>
+    <div id="industries" class="checkbox-group">
+      <label><input type="checkbox" value="Defense"> Defense</label>
+      <label><input type="checkbox" value="Automotive"> Automotive</label>
+      <label><input type="checkbox" value="Aerospace"> Aerospace</label>
+      <label><input type="checkbox" value="Healthcare"> Healthcare</label>
+      <label><input type="checkbox" value="Energy"> Energy</label>
+      <label><input type="checkbox" value="Industrial"> Industrial</label>
+      <label><input type="checkbox" value="Consumer"> Consumer</label>
+    </div>
+
+    <label>Project Timeframe:</label>
+    <div id="timeframe" class="radio-group">
+      <label><input type="radio" name="timeframe" value="1-3 months"> 1–3 months</label>
+      <label><input type="radio" name="timeframe" value="3-6 months"> 3–6 months</label>
+      <label><input type="radio" name="timeframe" value="6-9 months"> 6–9 months</label>
+    </div>
+
+    <label>Complexity Level:</label>
+    <div id="complexity" class="radio-group">
+      <label><input type="radio" name="complexity" value="Beginner"> Beginner</label>
+      <label><input type="radio" name="complexity" value="Intermediate"> Intermediate</label>
+      <label><input type="radio" name="complexity" value="Advanced"> Advanced</label>
+      <label><input type="radio" name="complexity" value="Cutting-edge"> Cutting-edge</label>
+    </div>
+
+    <label>Innovation Level:</label>
+    <select id="innovation">
+      <option value="College Student">College Student</option>
+      <option value="Engineering Professional">Engineering Professional</option>
+      <option value="Large Tech Corporate">Large Tech Corporate</option>
+      <option value="Research Lab">Research Lab</option>
+    </select>
+
+    <label>Demo Space Considerations:</label>
+    <select id="demo-space">
+      <option value="Small desk space">Small desk space</option>
+      <option value="Medium classroom space">Medium classroom space</option>
+      <option value="Large auditorium/trade show">Large auditorium / trade show</option>
+    </select>
+
+    <button id="generate" class="primary-btn">Generate Ideas</button>
+
+    <div id="extra-buttons" class="extra-buttons hidden">
+      <button id="expand">Expand Details</button>
+      <button id="similar">Similar Ideas</button>
+      <button id="summarize">Summarize</button>
+    </div>
+
+    <div id="output" class="output-box"></div>
   </div>
 
-  <button onclick="generateIdeas()">Generate Ideas</button>
-
-  <div id="output"></div>
-
-  <script src="script.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
