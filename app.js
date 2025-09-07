@@ -1,165 +1,115 @@
-// ==== Element handles ====
-const promptInput = document.getElementById("prompt");
-const generateBtn = document.getElementById("generate");
-const outputDiv = document.getElementById("output");
-const budgetSlider = document.getElementById("budget-slider");
-const budgetDisplay = document.getElementById("budget-display");
-const timeframeSlider = document.getElementById("timeframe-slider");
-const timeframeDisplay = document.getElementById("timeframe-display");
-const techGroup = document.getElementById("technologies");
-const industryGroup = document.getElementById("industries");
-const complexityGroup = document.getElementById("complexity");
-const innovationSelect = document.getElementById("innovation");
-const demoSelect = document.getElementById("demo");
-const extraButtons = document.getElementById("extra-buttons");
-const expandBtn = document.getElementById("expand");
-const similarBtn = document.getElementById("similar");
-const summarizeBtn = document.getElementById("summarize");
-const apiKeyInput = document.getElementById("api-key");
+const promptInput=document.getElementById("prompt");
+const generateBtn=document.getElementById("generate");
+const outputDiv=document.getElementById("output");
+const budgetSlider=document.getElementById("budget-slider");
+const budgetDisplay=document.getElementById("budget-display");
+const timeframeSlider=document.getElementById("timeframe-slider");
+const timeframeDisplay=document.getElementById("timeframe-display");
+const techGroup=document.getElementById("technologies");
+const industryGroup=document.getElementById("industries");
+const complexityGroup=document.getElementById("complexity");
+const innovationSelect=document.getElementById("innovation");
+const demoSelect=document.getElementById("demo");
+const apiKeyInput=document.getElementById("api-key");
 
-const DEFAULT_MODEL = "models/gemini-2.5-flash";
+noUiSlider.create(budgetSlider,{start:[100,1000],connect:true,range:{min:0,max:10000},step:50,tooltips:false});
+noUiSlider.create(timeframeSlider,{start:[6],connect:[true,false],range:{min:1,max:24},step:1,tooltips:false});
 
-// ==== Sliders ====
-noUiSlider.create(budgetSlider,{start:[100,1000],connect:true,range:{min:0,max:10000},step:50});
-noUiSlider.create(timeframeSlider,{start:[6,12],connect:true,range:{min:1,max:24},step:1});
+budgetSlider.noUiSlider.on("update",()=>{const v=budgetSlider.noUiSlider.get(true);budgetDisplay.textContent=`Range: $${Math.round(v[0])} – $${Math.round(v[1])}`});
+timeframeSlider.noUiSlider.on("update",()=>{const v=timeframeSlider.noUiSlider.get();timeframeDisplay.textContent=`${Math.round(v[0])} months`});
 
-function getBudgetRange(){ const values = budgetSlider.noUiSlider.get(true); return [Math.round(values[0]),Math.round(values[1])]; }
-function getTimeframeRange(){ const values = timeframeSlider.noUiSlider.get(true); return [Math.round(values[0]),Math.round(values[1])]; }
+function getBudgetRange(){const v=budgetSlider.noUiSlider.get(true);return[Math.round(v[0]),Math.round(v[1])]}
+function getTimeframe(){return Math.round(timeframeSlider.noUiSlider.get())}
+function getSelected(group){const cb=group?.querySelectorAll("input[type=checkbox]:checked")||[];return Array.from(cb).map(c=>c.value)}
+function getSelectedRadio(group){const sel=group.querySelector("input[type=radio]:checked");return sel?sel.value:"N/A"}
 
-budgetSlider.noUiSlider.on("update",()=>{ const [min,max]=getBudgetRange(); budgetDisplay.textContent=`Range: $${min} – $${max}`; });
-timeframeSlider.noUiSlider.on("update",()=>{ const [min,max]=getTimeframeRange(); timeframeDisplay.textContent=`${min} – ${max} months`; });
+function setOutput(msg){outputDiv.innerHTML=msg}
 
-// ==== Helpers ====
-function setOutput(msg,asHTML=false){ outputDiv.innerHTML = asHTML ? msg : `<p>${msg}</p>`; }
+function formatSection(title,content){return`
+<div class="section-title">${title} <span class="expand-icon">&#9654;</span></div>
+<div class="section-content">${content}</div>`}
 
-function getSelected(group){
-  const checked = group.querySelectorAll("input[type=checkbox]:checked")||[];
-  return Array.from(checked).map(cb=>cb.value);
-}
+function formatOutput(ideas){
+return ideas.map((idea,idx)=>`<div class="idea-card">
+<h2>Project ${idx+1}: ${idea.name||"Unnamed Project"}</h2>
+${formatSection("General Description",idea.description)}
+${formatSection("Required Technologies & Budget",idea.tech_budget)}
+${formatSection("Timeframe Breakdown",idea.timeframe)}
+${formatSection("Complexity & Skills",idea.complexity)}
+${formatSection("Similar Products",idea.similar)}
+${formatSection("Novel Elements",idea.novel)}
+</div>`).join("")}
 
-// ==== Generate function ====
-async function generateIdeas(mode="normal"){
-  const prompt = promptInput.value.trim();
-  const apiKey = apiKeyInput.value.trim();
-  if(!prompt){ setOutput("⚠️ Please enter a prompt."); return; }
-  if(!apiKey){ setOutput("⚠️ Please enter your API key."); return; }
+async function generateIdeas(){
+const prompt=promptInput.value.trim();
+const key=apiKeyInput.value.trim();
+if(!prompt){setOutput("⚠️ Please enter a prompt");return}
+if(!key){setOutput("⚠️ Please enter an API Key");return}
 
-  const [budgetMin,budgetMax] = getBudgetRange();
-  const [timeMin,timeMax] = getTimeframeRange();
-  const selectedTechs = getSelected(techGroup);
-  const selectedIndustries = getSelected(industryGroup);
-  const complexity = document.querySelector('input[name="complexity"]:checked')?.value || "Medium";
-  const innovation = innovationSelect.value;
-  const demo = demoSelect.value;
+const [budgetMin,budgetMax]=getBudgetRange();
+const timeframe=getTimeframe();
+const techs=getSelected(techGroup);
+const industries=getSelected(industryGroup);
+const complexity=getSelectedRadio(complexityGroup);
+const innovation=innovationSelect.value;
+const demo=demoSelect.value;
 
-  let enhancedPrompt = `
-User idea/constraints: ${prompt}
+setOutput("⏳ Generating ideas...");
+
+const enhancedPrompt=`User idea/constraints: ${prompt}
 Budget range: $${budgetMin} – $${budgetMax}
-Timeframe: ${timeMin} – ${timeMax} months
-Preferred technologies: ${selectedTechs.join(", ") || "N/A"}
-Industry focus: ${selectedIndustries.join(", ") || "N/A"}
-Project Complexity: ${complexity}
-Innovation Level: ${innovation}
-Demo Considerations: ${demo}
-`;
-
-  if(mode==="normal"){ enhancedPrompt+=`
+Timeframe (months): ${timeframe}
+Preferred technologies: ${techs.join(", ")||"N/A"}
+Industry focus: ${industries.join(", ")||"N/A"}
+Complexity level: ${complexity}
+Innovation level: ${innovation}
+Demo space: ${demo}
 Generate up to 3 computer engineering project ideas. For each, provide:
 - Name
 - General Description
 - Required Technologies & Budget Breakdown
-- Timeframe Breakdown
+- Timeframe Breakdown (research, dev, hardware, prototype)
 - Complexity & Skills Needed
 - Similar Products
-- Novel Elements`; }
-  else if(mode==="expand") enhancedPrompt+=`Expand the previous ideas with deeper technical details.`;
-  else if(mode==="similar") enhancedPrompt+=`Generate 3–5 related variations of the previous ideas.`;
-  else if(mode==="summarize") enhancedPrompt+=`Summarize the previous ideas into concise bullet points.`;
+- Novel Elements`;
 
-  setOutput("⏳ Generating ideas...");
-  extraButtons.classList.remove("hidden");
+try{
+const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,{
+method:"POST",
+headers:{"Content-Type":"application/json","x-goog-api-key":key},
+body:JSON.stringify({contents:[{parts:[{text:enhancedPrompt}]}],generationConfig:{temperature:0.7}})});
 
-  try{
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${DEFAULT_MODEL}:generateContent`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},
-      body: JSON.stringify({contents:[{parts:[{text:enhancedPrompt}]}],generationConfig:{temperature:0.7}})
-    });
-    const data = await res.json();
-    if(data.error){ setOutput(`❌ API Error: ${data.error.message}`); return; }
-    const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("").trim();
-    if(text){ setOutput(formatOutput(text),true); initCollapsible(); }
-    else setOutput("⚠️ No response from Gemini.");
-  }catch{ setOutput("❌ Network or fetch error."); }
-}
+const data=await res.json();
+if(data.error){setOutput(`❌ API Error: ${data.error.message}`);return}
 
-// ==== Format output ====
-function formatOutput(text){
-  let cleaned = text.replace(/\|/g," ").replace(/---+/g,"")
-    .replace(/<\/?table.*?>/gi,"").replace(/<\/?tr.*?>/gi,"")
-    .replace(/<\/?td.*?>/gi,"").replace(/\*\*/g,"").replace(/\*/g,"")
-    .replace(/###/g,"").replace(/##/g,"").trim();
+const text=data?.candidates?.[0]?.content?.map(p=>p.text||"").join("").trim();
+if(!text){setOutput("⚠️ No response from Gemini.");return}
 
-  let descriptionBox = cleaned.split(/\n/).slice(0,2).join(" ");
-  let html = `<div class="gen-description">${descriptionBox}</div>`;
+// Parse text into projects (simple split by Project Idea X)
+const projects=text.split(/Project Idea\s*\d+/i).filter(s=>s.trim()).slice(0,3).map(p=>{
+const lines=p.split("\n").filter(l=>l.trim());
+const extract=(title)=>{const idx=lines.findIndex(l=>l.toLowerCase().includes(title.toLowerCase()));return idx>=0?lines[idx+1]||"N/A":"N/A"}
+return{
+name:extract("Name"),
+description:extract("General Description"),
+tech_budget:extract("Required Technologies")+"\n"+extract("Budget Breakdown"),
+timeframe:extract("Timeframe Breakdown"),
+complexity:extract("Complexity")+ " | " +innovation,
+similar:extract("Similar Products"),
+novel:extract("Novel Elements")
+}});
 
-  let projects = cleaned.split(/Project Idea\s*\d+/i).filter(s=>s.trim()).slice(0,3);
-  if(projects.length===0 && cleaned) projects=[cleaned];
+setOutput(formatOutput(projects));
 
-  projects.forEach((proj,idx)=>{
-    let titleMatch = proj.match(/Name\s*[:\-]\s*(.*)/i);
-    let title = titleMatch?titleMatch[1]:`Project ${idx+1}`;
+// setup toggle arrows
+document.querySelectorAll(".section-title").forEach(title=>{
+const icon=title.querySelector(".expand-icon");
+const content=title.nextElementSibling;
+title.addEventListener("click",()=>{
+content.style.display=content.style.display==="block"?"none":"block";
+icon.classList.toggle("open");
+})})
 
-    const sections = ["General Description","Required Technologies & Budget Breakdown","Timeframe Breakdown","Complexity & Skills Needed","Similar Products","Novel Elements"];
+}catch(e){setOutput("❌ Network or fetch error.")}}
 
-    let htmlSections="";
-    sections.forEach(sec=>{
-      let regex = new RegExp(sec+"[:\\-]?\\s*(.*?)((?="+sections.join("|")+")|$)","is");
-      let match = proj.match(regex);
-      let content = match?match[1].trim():"";
-
-      if(sec==="Timeframe Breakdown" && !content){
-        const [timeMin,timeMax]=getTimeframeRange();
-        content = `- Research: ${Math.round(timeMax*0.25)} months
-- Development: ${Math.round(timeMax*0.4)} months
-- Hardware setup: ${Math.round(timeMax*0.2)} months
-- Final prototype ready: ${Math.round(timeMax*0.15)} months`;
-      }
-      if(sec==="Complexity & Skills Needed" && !content){
-        const comp=document.querySelector('input[name="complexity"]:checked')?.value||"Medium";
-        const innov=innovationSelect.value;
-        content = `- Complexity: ${comp}
-- Skills / Experience Needed: ${innov}`;
-      }
-
-      content=content.split(/\n/).map(l=>l.trim()).filter(l=>l).map(l=>l.startsWith("-")?l:`- ${l}`).join("<br>");
-
-      htmlSections+=`<div class="section-title">${sec} <span class="expand-icon">▶</span></div>
-      <div class="section-content">${content}</div>`;
-    });
-
-    html+=`<div class="idea-card fade-in"><h2>${title}</h2>${htmlSections}</div>`;
-  });
-
-  return html;
-}
-
-// ==== Collapsible sections ====
-function initCollapsible(){
-  document.querySelectorAll(".section-title").forEach(title=>{
-    const icon=title.querySelector(".expand-icon");
-    const content=title.nextElementSibling;
-    content.style.display="none";
-    title.addEventListener("click",()=>{
-      const isOpen=content.style.display==="block";
-      content.style.display=isOpen?"none":"block";
-      icon.classList.toggle("open",!isOpen);
-    });
-  });
-}
-
-// ==== Button events ====
-generateBtn.addEventListener("click",()=>generateIdeas("normal"));
-expandBtn.addEventListener("click",()=>generateIdeas("expand"));
-similarBtn.addEventListener("click",()=>generateIdeas("similar"));
-summarizeBtn.addEventListener("click",()=>generateIdeas("summarize"));
+generateBtn.addEventListener("click",generateIdeas);
