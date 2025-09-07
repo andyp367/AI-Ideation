@@ -46,15 +46,16 @@ function formatOutput(text){
   projects.forEach((proj,idx)=>{
     let titleMatch = proj.match(/Name\s*[:\-]\s*(.*)/i);
     let title = titleMatch?titleMatch[1]:`Project ${idx+1}`;
-    let sections = proj.split(/(General Description|Required Technologies|Budget Breakdown|Similar Products|Novel Elements)/gi)
-                       .filter(s=>s.trim());
-    let htmlSections="";
-    for(let i=0;i<sections.length;i+=2){
-      let secTitle = sections[i].trim();
-      let secContent = (sections[i+1]||"").trim().replace(/\n{2,}/g,"<br>");
-      htmlSections += `<div class="section-title">${secTitle} <span class="expand-icon">▶</span></div>
-        <div class="section-content">${secContent}</div>`;
-    }
+    // Always show section titles
+    const sections = ["General Description","Required Technologies","Budget Breakdown","Timeframe Breakdown","Complexity","Similar Products","Novel Elements"];
+    let htmlSections = "";
+    sections.forEach(sec=>{
+      let regex = new RegExp(sec+"[:\\-]?\\s*(.*?)((?="+sections.join("|")+")|$)","is");
+      let match = proj.match(regex);
+      let content = match?match[1].trim().replace(/\n{2,}/g,"<br>"):"Content not provided.";
+      htmlSections += `<div class="section-title">${sec} <span class="expand-icon">▶</span></div>
+        <div class="section-content">${content}</div>`;
+    });
     html += `<div class="idea-card fade-in"><h2>${title}</h2>${htmlSections}</div>`;
   });
   return html;
@@ -66,9 +67,9 @@ function initCollapsible(){
     const icon = title.querySelector(".expand-icon");
     const content = title.nextElementSibling;
     title.addEventListener("click", ()=>{
-      const open = content.style.display==="block";
-      content.style.display = open?"none":"block";
-      icon.classList.toggle("open",!open);
+      const isOpen = content.style.display==="block";
+      content.style.display = isOpen?"none":"block";
+      icon.classList.toggle("open",!isOpen);
     });
   });
 }
