@@ -3,33 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CE Project Ideator</title>
+  <title>Computer Engineering Project Ideator</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
 </head>
 <body>
   <div class="container">
+
     <h1>Computer Engineering Project Ideator</h1>
+
     <div class="columns">
-      <!-- Left column: Parameters -->
-      <div class="column parameters-panel">
-        <label class="param-title">API Key</label>
-        <input type="text" id="api-key" placeholder="Enter your API key" class="small-input">
 
-        <label class="param-title">Project Idea / Constraints</label>
-        <textarea id="prompt" placeholder="Describe your idea, constraints, or interests..." class="large-textarea"></textarea>
+      <!-- Left Column: Parameters -->
+      <div class="column-left">
 
-        <label class="param-title">Budget Range (USD)</label>
+        <label for="api-key">API Key:</label>
+        <input type="text" id="api-key" placeholder="Enter your API key here...">
+
+        <label for="prompt">Project Idea / Constraints:</label>
+        <textarea id="prompt" placeholder="Describe your idea, constraints, or interests..."></textarea>
+
+        <label>Budget Range (USD):</label>
         <div id="budget-slider"></div>
-        <div id="budget-display" class="compact-display">Range: $100 – $1000</div>
+        <div id="budget-display">Range: $100 – $1000</div>
 
-        <label class="param-title">Timeframe (Months)</label>
+        <label>Timeframe (months):</label>
         <div id="timeframe-slider"></div>
-        <div id="timeframe-display" class="compact-display">1 – 12 months</div>
+        <div id="timeframe-display">6 – 12 months</div>
 
-        <label class="param-title">Relevant Technologies</label>
-        <div id="technologies" class="checkbox-group compact-group">
+        <label>Relevant Technologies:</label>
+        <div id="technologies" class="checkbox-group">
           <label><input type="checkbox" value="Embedded Systems"> Embedded Systems</label>
           <label><input type="checkbox" value="IoT"> IoT</label>
           <label><input type="checkbox" value="AI/ML"> AI/ML</label>
@@ -45,8 +49,8 @@
           <label><input type="checkbox" value="Software Application"> Software Application</label>
         </div>
 
-        <label class="param-title">Industry Focus</label>
-        <div id="industries" class="checkbox-group compact-group">
+        <label>Industry Focus:</label>
+        <div id="industries" class="checkbox-group">
           <label><input type="checkbox" value="Defense"> Defense</label>
           <label><input type="checkbox" value="Automotive"> Automotive</label>
           <label><input type="checkbox" value="Aerospace"> Aerospace</label>
@@ -56,37 +60,37 @@
           <label><input type="checkbox" value="Consumer"> Consumer</label>
         </div>
 
-        <label class="param-title">Project Complexity</label>
-        <div id="complexity" class="radio-group compact-group">
+        <label>Complexity:</label>
+        <div id="complexity" class="radio-group">
           <label><input type="radio" name="complexity" value="Low"> Low</label>
-          <label><input type="radio" name="complexity" value="Medium"> Medium</label>
+          <label><input type="radio" name="complexity" value="Medium" checked> Medium</label>
           <label><input type="radio" name="complexity" value="High"> High</label>
         </div>
 
-        <label class="param-title">Innovation Level</label>
-        <select id="innovation" class="small-input">
+        <label>Innovation Level:</label>
+        <select id="innovation">
           <option value="College Student Level">College Student Level</option>
           <option value="Engineering Level">Engineering Level</option>
-          <option value="Corporate Tech Level">Corporate Tech Level</option>
-          <option value="Cutting-Edge Research">Cutting-Edge Research</option>
+          <option value="Corporate Technology Level">Corporate Technology Level</option>
         </select>
 
-        <label class="param-title">Demo Considerations</label>
-        <select id="demo" class="small-input">
-          <option value="Small Desk">Small Desk</option>
-          <option value="Lab Bench">Lab Bench</option>
-          <option value="Classroom">Classroom</option>
-          <option value="Large Lab / Expo">Large Lab / Expo</option>
+        <label>Demo Considerations:</label>
+        <select id="demo">
+          <option value="Small tabletop demo">Small tabletop demo</option>
+          <option value="Medium lab space demo">Medium lab space demo</option>
+          <option value="Large demo area or industrial space">Large demo area / industrial space</option>
         </select>
 
         <button id="generate" class="primary-btn">Generate Ideas</button>
+
       </div>
 
-      <!-- Right column: Output -->
-      <div class="column output-panel">
-        <div class="output-label">Generated project ideas will appear here:</div>
+      <!-- Right Column: Results -->
+      <div class="column-right">
+        <h2 class="results-title">Project Ideas will appear here:</h2>
         <div id="output" class="output-box"></div>
       </div>
+
     </div>
   </div>
 
