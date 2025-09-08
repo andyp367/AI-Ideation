@@ -3,26 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Computer Engineering Project Ideator</title>
+  <title>CE Project Ideator</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
 </head>
 <body>
   <div class="container">
-
     <h1>Computer Engineering Project Ideator</h1>
 
     <div class="columns">
-
-      <!-- Left Column: Parameters -->
-      <div class="column-left">
-
+      <!-- Left column: Parameters -->
+      <div class="column column-left">
         <label for="api-key">API Key:</label>
-        <input type="text" id="api-key" placeholder="Enter your API key here...">
+        <input type="text" id="api-key" placeholder="Enter your Google API Key">
 
         <label for="prompt">Project Idea / Constraints:</label>
-        <textarea id="prompt" placeholder="Describe your idea, constraints, or interests..."></textarea>
+        <textarea id="prompt" placeholder="Describe your ideas, constraints, and/or interests..." rows="5"></textarea>
 
         <label>Budget Range (USD):</label>
         <div id="budget-slider"></div>
@@ -60,7 +57,7 @@
           <label><input type="checkbox" value="Consumer"> Consumer</label>
         </div>
 
-        <label>Complexity:</label>
+        <label>Project Complexity:</label>
         <div id="complexity" class="radio-group">
           <label><input type="radio" name="complexity" value="Low"> Low</label>
           <label><input type="radio" name="complexity" value="Medium" checked> Medium</label>
@@ -71,26 +68,25 @@
         <select id="innovation">
           <option value="College Student Level">College Student Level</option>
           <option value="Engineering Level">Engineering Level</option>
-          <option value="Corporate Technology Level">Corporate Technology Level</option>
+          <option value="Corporate Technology Level">Huge Technology Corporate Level</option>
         </select>
 
         <label>Demo Considerations:</label>
         <select id="demo">
-          <option value="Small tabletop demo">Small tabletop demo</option>
-          <option value="Medium lab space demo">Medium lab space demo</option>
-          <option value="Large demo area or industrial space">Large demo area / industrial space</option>
+          <option value="Small Tabletop Demo">Small Tabletop Demo</option>
+          <option value="Medium Room Demo">Medium Room Demo</option>
+          <option value="Large Open Space Demo">Large Open Space Demo</option>
         </select>
 
         <button id="generate" class="primary-btn">Generate Ideas</button>
-
       </div>
 
-      <!-- Right Column: Results -->
-      <div class="column-right">
-        <h2 class="results-title">Project Ideas will appear here:</h2>
+      <!-- Right column: Results -->
+      <div class="column column-right">
+        <h2>Results</h2>
+        <p>The generated project ideas will appear here:</p>
         <div id="output" class="output-box"></div>
       </div>
-
     </div>
   </div>
 
